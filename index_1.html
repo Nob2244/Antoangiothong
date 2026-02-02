@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>NaradoOS - Nghệ An Forest Edition</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Special+Elite&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --paper: #f4ebd0;
+        --paper-dark: #d4bc8a;
+        --ink: #2c1e14;
+        --accent: #4a5d23;
+        --bar-bg: rgba(25, 20, 15, 0.92);
+        --radius: 12px;
+      }
+
+      * {
+        box-sizing: border-box;
+        outline: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),
+          url("https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80&w=2000")
+            center/cover;
+        font-family: "JetBrains Mono", monospace;
+        color: var(--ink);
+      }
+
+      #hero {
+        position: absolute;
+        top: 45%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 0;
+        text-align: center;
+        pointer-events: none;
+      }
+      #hero h1 {
+        font-family: "Special Elite";
+        font-size: 4.5rem;
+        margin: 0;
+        color: #e5ff61;
+        opacity: 0.75;
+        text-transform: uppercase;
+        letter-spacing: 12px;
+      }
+      #hero h2 {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.75rem;
+        margin: -5px 0 0 0;
+        color: #f4ebd0;
+        opacity: 0.8;
+        text-transform: uppercase;
+        letter-spacing: 6px;
+        font-weight: normal;
+      }
+
+      #top-dock {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        height: 45px;
+        background: var(--bar-bg);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 15px;
+        z-index: 10000;
+        color: #f4ebd0;
+        font-size: 12px;
+      }
+
+      #left-panel {
+        position: fixed;
+        top: 65px;
+        left: 15px;
+        bottom: 85px;
+        width: calc(100vw / 6);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 1000;
+        transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .side-box {
+        background: rgba(244, 235, 208, 0.96);
+        border-radius: var(--radius);
+        border: 2px solid var(--paper-dark);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: 0.5s;
+        box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
+      }
+      .box-header {
+        padding: 10px 15px;
+        background: var(--paper-dark);
+        font-weight: bold;
+        font-family: "Special Elite";
+        display: flex;
+        justify-content: space-between;
+        cursor: pointer;
+        color: var(--ink);
+        font-size: 13px;
+      }
+      .box-content {
+        padding: 15px;
+        overflow-y: auto;
+        flex: 1;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      #noti-box {
+        height: 0;
+        opacity: 0;
+        visibility: hidden;
+      }
+      #noti-box.active {
+        height: 33.33%;
+        opacity: 1;
+        visibility: visible;
+      }
+      #news-box {
+        flex: 1;
+      }
+      #news-box.shrunk {
+        height: 66.66%;
+        flex: none;
+      }
+      #news-box.collapsed {
+        height: 40px;
+        flex: none;
+      }
+
+      #music-menu {
+        position: fixed;
+        top: 65px;
+        right: 15px;
+        width: 280px;
+        background: var(--paper);
+        border: 2px solid var(--paper-dark);
+        border-radius: var(--radius);
+        padding: 20px;
+        display: none;
+        z-index: 11000;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+      .ctrl-btn {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        border: none;
+        background: var(--paper-dark);
+        cursor: pointer;
+        font-size: 18px;
+        box-shadow: 0 4px 0px #8b7355;
+        transition: 0.1s;
+        color: var(--ink);
+      }
+      .ctrl-btn:active {
+        transform: translateY(2px);
+        box-shadow: 0 0px 0px #8b7355;
+      }
+
+      /* --- LAUNCHER --- */
+      #launcher-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 20000;
+      }
+      #launcher-win {
+        width: 66.6vw;
+        height: 66.6vh;
+        background: var(--paper);
+        border: 3px solid var(--paper-dark);
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(100vh);
+        transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow: hidden;
+      }
+      #launcher-overlay.open {
+        display: flex;
+      }
+      #launcher-overlay.open #launcher-win {
+        transform: translateY(0);
+      }
+      .launcher-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 20px;
+        padding: 30px;
+        overflow-y: auto;
+      }
+      .launcher-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+      .item-icon {
+        width: 70px;
+        height: 70px;
+        background: var(--paper-dark);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+      }
+
+      /* --- WINDOWS --- */
+      .window {
+        position: absolute;
+        background: var(--accent);
+        border-radius: var(--radius);
+        padding: 2px;
+        box-shadow: 15px 15px 40px rgba(0, 0, 0, 0.4);
+        display: flex;
+        flex-direction: column;
+      }
+      .win-inner {
+        background: var(--paper);
+        flex: 1;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+      .win-header {
+        padding: 10px 15px;
+        cursor: move;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--paper-dark);
+      }
+      .win-close {
+        width: 15px;
+        height: 15px;
+        background: #c0392b;
+        border-radius: 50%;
+        border: 1px solid #000;
+        cursor: pointer;
+      }
+      .win-body {
+        padding: 20px;
+        overflow-y: auto;
+        flex: 1;
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--ink);
+      }
+      .resizer {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 25px;
+        height: 25px;
+        cursor: nwse-resize;
+        background: linear-gradient(135deg, transparent 70%, var(--accent) 70%);
+        border-bottom-right-radius: 10px;
+      }
+
+      /* --- BOTTOM DOCK --- */
+      #bottom-dock {
+        position: fixed;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--bar-bg);
+        padding: 8px 15px;
+        border-radius: 15px;
+        display: flex;
+        gap: 10px;
+        z-index: 10000;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        max-width: 95vw;
+        overflow-x: auto;
+      }
+      .dock-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        border: none;
+        background: var(--paper-dark);
+        cursor: pointer;
+        font-size: 22px;
+        flex-shrink: 0;
+        transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      .dock-btn:hover {
+        transform: translateY(-8px);
+        border-radius: 50%;
+      }
+
+      @media (max-width: 768px) {
+        .dock-btn:nth-child(n + 7) {
+          display: none;
+        } /* Tự giảm icon trên màn nhỏ */
+      }
+    </style>
+  </head>
+  <body oncontextmenu="return false;">
+    <div id="hero">
+      <h1>AN TOÀN GIAO THÔNG</h1>
+      <h2>ĐỌC THÔNG TIN GIAO THÔNG VÀ THƯ GIÃN NÀO</h2>
+    </div>
+
+    <header id="top-dock">
+      <div style="display: flex; gap: 15px; align-items: center">
+        <b style="font-family: 'Special Elite'; font-size: 15px">NaradoOS</b>
+        <span id="clock" style="font-weight: bold">...</span>
+        <span style="cursor: pointer; font-size: 18px" onclick="toggleNoti()"
+          >🔔</span
+        >
+      </div>
+      <div style="display: flex; gap: 15px; align-items: center">
+        <span>🌡️ <span id="temp">--</span>°C Nghệ An</span>
+        <span>☀️ Nắng ấm chan hoà</span>
+        <span style="cursor: pointer; font-weight: bold" onclick="toggleMusic()"
+          >🎵 Music</span
+        >
+      </div>
+    </header>
+
+    <div id="left-panel">
+      <div id="noti-box" class="side-box">
+        <div class="box-header">THÔNG BÁO</div>
+        <div
+          class="box-content"
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.6;
+            text-align: center;
+          "
+        >
+          hiện chưa có thông báo
+        </div>
+      </div>
+      <div id="news-box" class="side-box">
+        <div class="box-header" onclick="toggleNews()">
+          <span id="news-title">TIN TAI NẠN</span>
+          <span id="news-icon">−</span>
+        </div>
+        <div class="box-content">
+          <p>
+            • <b>Sự cố</b>: Va chạm trên QL1A đoạn qua Nghệ An, giao thông ùn
+            tắc nhẹ.
+          </p>
+          <hr style="border: 0; border-top: 1px dashed var(--paper-dark)" />
+          <p>
+            • <b>Nhắc nhở</b>: Tài xế chú ý giữ khoảng cách an toàn khi đi qua
+            khu vực rừng núi.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div id="music-menu">
+      <div
+        id="song-name"
+        style="
+          text-align: center;
+          font-size: 11px;
+          font-weight: bold;
+          margin-bottom: 15px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        "
+      >
+        LOVE IS GONE - SYENSAN REMIX
+      </div>
+      <div style="display: flex; justify-content: center; gap: 15px">
+        <button class="ctrl-btn" onclick="scAction('prev')">⏮</button>
+        <button class="ctrl-btn" id="play-btn" onclick="scAction('toggle')">
+          ▶
+        </button>
+        <button class="ctrl-btn" onclick="scAction('next')">⏭</button>
+      </div>
+      <input
+        type="range"
+        id="vol"
+        min="0"
+        max="100"
+        value="70"
+        style="width: 100%; margin-top: 15px; accent-color: var(--accent)"
+      />
+    </div>
+
+    <div id="launcher-overlay" onclick="toggleLauncher(false)">
+      <div id="launcher-win" onclick="event.stopPropagation()">
+        <div
+          style="
+            padding: 15px;
+            text-align: center;
+            border-bottom: 2px solid var(--paper-dark);
+            font-family: 'Special Elite';
+          "
+        >
+          MAIN MENU
+        </div>
+        <div class="launcher-grid" id="launcher-grid"></div>
+      </div>
+    </div>
+
+    <div id="workspace"></div>
+
+    <footer id="bottom-dock">
+      <button
+        class="dock-btn"
+        style="background: var(--accent); color: white"
+        onclick="toggleLauncher(true)"
+      >
+        🎯
+      </button>
+      <button class="dock-btn" onclick="WM.open('m1')">📜</button>
+      <button class="dock-btn" onclick="WM.open('m2')">🚗</button>
+      <button class="dock-btn" onclick="WM.open('m3')">🏍️</button>
+      <button class="dock-btn" onclick="WM.open('m5')">📊</button>
+      <button class="dock-btn" onclick="WM.open('m6')">🎓</button>
+      <button class="dock-btn" onclick="WM.open('m7')">🛡️</button>
+      <button class="dock-btn" onclick="WM.open('m8')">🔧</button>
+      <button class="dock-btn" onclick="WM.open('m9')">🚑</button>
+    </footer>
+
+    <iframe
+      id="sc-iframe"
+      src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1959829911&auto_play=true"
+      style="display: none"
+    ></iframe>
+    <script src="https://w.soundcloud.com/player/api.js"></script>
+
+    <script>
+      const categories = [
+        {
+          id: "m1",
+          icon: "📜",
+          title: "Pháp luật",
+          content:
+            "Luật Giao thông đường bộ và các nghị định xử phạt mới nhất.",
+        },
+        {
+          id: "m2",
+          icon: "🚗",
+          title: "Lái xe an toàn",
+          content: "Kỹ năng lái xe trong các điều kiện địa hình phức tạp.",
+        },
+        {
+          id: "m3",
+          icon: "🏍️",
+          title: "Phương tiện",
+          content: "Quy chuẩn an toàn cho xe máy và ô tô tải.",
+        },
+        {
+          id: "m5",
+          icon: "📊",
+          title: "Thống kê",
+          content: "Dữ liệu tai nạn và phân tích nguyên nhân tại địa phương.",
+        },
+        {
+          id: "m6",
+          icon: "🎓",
+          title: "Giáo dục",
+          content: "Tài liệu học lý thuyết và mô phỏng thực hành lái xe.",
+        },
+        {
+          id: "m7",
+          icon: "🛡️",
+          title: "Công nghệ",
+          content: "Thiết bị hỗ trợ lái xe và giám sát hành trình.",
+        },
+        {
+          id: "m8",
+          icon: "🔧",
+          title: "Bảo dưỡng",
+          content: "Quy trình kiểm tra xe định kỳ đảm bảo an toàn vận hành.",
+        },
+        {
+          id: "m9",
+          icon: "🚑",
+          title: "Sơ cứu",
+          content: "Hướng dẫn sơ cấp cứu cơ bản khi xảy ra va chạm.",
+        },
+      ];
+
+      const grid = document.getElementById("launcher-grid");
+      categories.forEach((cat) => {
+        grid.innerHTML += `<div class="launcher-item" onclick="WM.open('${cat.id}'); toggleLauncher(false)">
+                <div class="item-icon">${cat.icon}</div><span>${cat.title}</span>
+            </div>`;
+      });
+
+      function toggleLauncher(s) {
+        const o = document.getElementById("launcher-overlay");
+        if (s) {
+          o.style.display = "flex";
+          setTimeout(() => o.classList.add("open"), 10);
+        } else {
+          o.classList.remove("open");
+          setTimeout(() => (o.style.display = "none"), 600);
+        }
+      }
+
+      function toggleNoti() {
+        const n = document.getElementById("noti-box"),
+          s = document.getElementById("news-box");
+        n.classList.toggle("active");
+        if (n.classList.contains("active")) s.classList.add("shrunk");
+        else s.classList.remove("shrunk");
+      }
+
+      function toggleNews() {
+        const s = document.getElementById("news-box"),
+          i = document.getElementById("news-icon"),
+          t = document.getElementById("news-title");
+        s.classList.toggle("collapsed");
+        if (s.classList.contains("collapsed")) {
+          i.innerText = "+";
+          t.innerText = "TIN";
+        } else {
+          i.innerText = "−";
+          t.innerText = "TIN TAI NẠN";
+        }
+      }
+
+      const widget = SC.Widget(document.getElementById("sc-iframe"));
+      const btn = document.getElementById("play-btn");
+
+      function toggleMusic() {
+        const m = document.getElementById("music-menu");
+        m.style.display = m.style.display === "block" ? "none" : "block";
+      }
+
+      widget.bind(SC.Widget.Events.PLAY, function () {
+        btn.innerText = "⏸";
+      });
+
+      widget.bind(SC.Widget.Events.PAUSE, function () {
+        btn.innerText = "▶";
+      });
+
+      function scAction(a) {
+        if (a === "toggle") {
+          widget.toggle();
+        } else if (a === "next") {
+          widget.next();
+        } else if (a === "prev") {
+          widget.prev();
+        }
+      }
+
+      const WM = {
+        z: 1000,
+        open(id) {
+          const exist = document.getElementById("win-" + id);
+          if (exist) {
+            this.focus(exist);
+            return;
+          }
+          const cat = categories.find((c) => c.id === id);
+          const win = document.createElement("div");
+          win.id = "win-" + id;
+          win.className = "window active";
+          win.style.left = "30%";
+          win.style.top = "20%";
+          win.style.width = "500px";
+          win.style.height = "350px";
+          win.style.zIndex = ++this.z;
+          win.innerHTML = `<div class="win-inner">
+                    <div class="win-header">
+                        <button class="win-close" onclick="WM.close('${id}')"></button>
+                        <span style="font-size:10px; font-weight:bold;">${cat.title.toUpperCase()}</span>
+                        <div style="width:15px"></div>
+                    </div>
+                    <div class="win-body"><h3>${
+                      cat.title
+                    }</h3><hr style="border:0; border-top:1px solid var(--paper-dark); margin:10px 0;">${
+            cat.content
+          }</div>
+                    <div class="resizer"></div>
+                </div>`;
+          document.getElementById("workspace").appendChild(win);
+          this.initEvents(win);
+        },
+        close(id) {
+          document.getElementById("win-" + id).remove();
+        },
+        focus(w) {
+          document
+            .querySelectorAll(".window")
+            .forEach((x) => x.classList.remove("active"));
+          w.classList.add("active");
+          w.style.zIndex = ++this.z;
+        },
+        initEvents(win) {
+          const h = win.querySelector(".win-header"),
+            r = win.querySelector(".resizer");
+          h.onmousedown = (e) => {
+            this.focus(win);
+            let ox = e.clientX - win.offsetLeft,
+              oy = e.clientY - win.offsetTop;
+            document.onmousemove = (m) => {
+              win.style.left = m.clientX - ox + "px";
+              win.style.top = m.clientY - oy + "px";
+            };
+            document.onmouseup = () => (document.onmousemove = null);
+          };
+          r.onmousedown = (e) => {
+            e.stopPropagation();
+            document.onmousemove = (m) => {
+              win.style.width =
+                Math.max(350, m.clientX - win.offsetLeft) + "px";
+              win.style.height =
+                Math.max(250, m.clientY - win.offsetTop) + "px";
+            };
+            document.onmouseup = () => (document.onmousemove = null);
+          };
+        },
+      };
+
+      setInterval(() => {
+        const n = new Date();
+        const hr = String(n.getHours()).padStart(2, "0"),
+          mn = String(n.getMinutes()).padStart(2, "0"),
+          sc = String(n.getSeconds()).padStart(2, "0");
+        document.getElementById("clock").innerText = `${n.getFullYear()}/${
+          n.getMonth() + 1
+        }/${n.getDate()} ${hr}:${mn}:${sc}`;
+      }, 1000);
+
+      // Weather Nghệ An (Vinh)
+      fetch(
+        "https://api.open-meteo.com/v1/forecast?latitude=18.67&longitude=105.68&current=temperature_2m"
+      )
+        .then((r) => r.json())
+        .then(
+          (d) =>
+            (document.getElementById("temp").innerText = Math.round(
+              d.current.temperature_2m
+            ))
+        );
+    </script>
+  </body>
+</html>
